@@ -1,0 +1,47 @@
+{
+  "name": "keyboard-heatmap",
+  "version": "1.0.0",
+  "description": "A TypeScript package for tracking keyboard key presses and generating heatmap visualizations",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "keyboard",
+    "heatmap",
+    "tracking",
+    "analytics",
+    "typing",
+    "react",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/react": "^18.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/keyboard-heatmap.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/keyboard-heatmap/issues"
+  },
+  "homepage": "https://github.com/yourusername/keyboard-heatmap#readme"
+} 

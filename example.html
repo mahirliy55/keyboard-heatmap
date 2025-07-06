@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keyboard Heatmap Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+        }
+        
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .stats {
+            margin: 20px 0;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+        
+        .heatmap-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .instructions {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .top-keys {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .key-stat {
+            background: #007bff;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎹 Keyboard Heatmap Demo</h1>
+        
+        <div class="instructions">
+            <strong>Instructions:</strong> Click "Start Tracking" and then start typing on your keyboard. 
+            The heatmap will show which keys you press most frequently. Try typing some text to see the visualization update!
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">Start Tracking</button>
+            <button id="stopBtn" disabled>Stop Tracking</button>
+            <button id="resetBtn">Reset Data</button>
+            <button id="toggleHeatmap">Show Heatmap</button>
+        </div>
+        
+        <div class="stats" id="stats">
+            <strong>Status:</strong> <span id="status">Not tracking</span><br>
+            <strong>Total Key Presses:</strong> <span id="totalPresses">0</span><br>
+            <strong>Session Duration:</strong> <span id="duration">0s</span>
+            <div id="topKeys"></div>
+        </div>
+        
+        <div class="heatmap-container">
+            <div id="heatmap"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // This is a simplified example - in a real app you'd import from the npm package
+        // For demo purposes, we'll create a basic implementation
+        
+        class SimpleKeyboardTracker {
+            constructor() {
+                this.frequencies = {};
+                this.totalPresses = 0;
+                this.startTime = 0;
+                this.isCurrentlyTracking = false;
+                this.handleKeyDown = this.onKeyDown.bind(this);
+            }
+            
+            onKeyDown(event) {
+                let key = event.key;
+                
+                // Skip modifier keys
+                if (['Control', 'Alt', 'Shift', 'Meta'].includes(key)) {
+                    return;
+                }
+                
+                // Convert to lowercase for consistency
+                key = key.toLowerCase();
+                
+                // Update frequencies
+                this.frequencies[key] = (this.frequencies[key] || 0) + 1;
+                this.totalPresses++;
+            }
+            
+            startTracking() {
+                if (this.isCurrentlyTracking) return;
+                
+                this.startTime = Date.now();
+                this.isCurrentlyTracking = true;
+                document.addEventListener('keydown', this.handleKeyDown, true);
+            }
+            
+            stopTracking() {
+                if (!this.isCurrentlyTracking) return null;
+                
+                this.isCurrentlyTracking = false;
+                document.removeEventListener('keydown', this.handleKeyDown, true);
+                
+                return {
+                    frequencies: { ...this.frequencies },
+                    totalPresses: this.totalPresses,
+                    startTime: this.startTime,
+                    endTime: Date.now()
+                };
+            }
+            
+            getHeatmapData() {
+                return {
+                    frequencies: { ...this.frequencies },
+                    totalPresses: this.totalPresses,
+                    startTime: this.startTime,
+                    endTime: this.isCurrentlyTracking ? undefined : Date.now()
+                };
+            }
+            
+            isTracking() {
+                return this.isCurrentlyTracking;
+            }
+            
+            reset() {
+                if (this.isCurrentlyTracking) {
+                    document.removeEventListener('keydown', this.handleKeyDown, true);
+                    this.isCurrentlyTracking = false;
+                }
+                this.frequencies = {};
+                this.totalPresses = 0;
+                this.startTime = 0;
+            }
+        }
+        
+        // Create tracker instance
+        const tracker = new SimpleKeyboardTracker();
+        let updateInterval = null;
+        let showingHeatmap = false;
+        
+        // DOM elements
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const toggleHeatmapBtn = document.getElementById('toggleHeatmap');
+        const statusSpan = document.getElementById('status');
+        const totalPressesSpan = document.getElementById('totalPresses');
+        const durationSpan = document.getElementById('duration');
+        const topKeysDiv = document.getElementById('topKeys');
+        const heatmapDiv = document.getElementById('heatmap');
+        
+        // Event listeners
+        startBtn.addEventListener('click', () => {
+            tracker.startTracking();
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            statusSpan.textContent = 'Tracking...';
+            
+            // Start update interval
+            updateInterval = setInterval(updateStats, 1000);
+        });
+        
+        stopBtn.addEventListener('click', () => {
+            tracker.stopTracking();
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            statusSpan.textContent = 'Stopped';
+            
+            // Clear update interval
+            if (updateInterval) {
+                clearInterval(updateInterval);
+                updateInterval = null;
+            }
+            
+            updateStats();
+        });
+        
+        resetBtn.addEventListener('click', () => {
+            tracker.reset();
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            statusSpan.textContent = 'Not tracking';
+            
+            // Clear update interval
+            if (updateInterval) {
+                clearInterval(updateInterval);
+                updateInterval = null;
+            }
+            
+            updateStats();
+            heatmapDiv.innerHTML = '';
+        });
+        
+        toggleHeatmapBtn.addEventListener('click', () => {
+            showingHeatmap = !showingHeatmap;
+            toggleHeatmapBtn.textContent = showingHeatmap ? 'Hide Heatmap' : 'Show Heatmap';
+            
+            if (showingHeatmap) {
+                generateSimpleHeatmap();
+            } else {
+                heatmapDiv.innerHTML = '';
+            }
+        });
+        
+        function updateStats() {
+            const data = tracker.getHeatmapData();
+            
+            totalPressesSpan.textContent = data.totalPresses;
+            
+            if (data.startTime > 0) {
+                const duration = Math.round((Date.now() - data.startTime) / 1000);
+                durationSpan.textContent = duration + 's';
+            } else {
+                durationSpan.textContent = '0s';
+            }
+            
+            // Show top keys
+            const topKeys = Object.entries(data.frequencies)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 10);
+            
+            topKeysDiv.innerHTML = '<strong>Top Keys:</strong><div class="top-keys">' + 
+                topKeys.map(([key, count]) => 
+                    `<span class="key-stat">${key}: ${count}</span>`
+                ).join('') + '</div>';
+        }
+        
+        function generateSimpleHeatmap() {
+            const data = tracker.getHeatmapData();
+            
+            if (data.totalPresses === 0) {
+                heatmapDiv.innerHTML = '<p>No data to display. Start typing to see the heatmap!</p>';
+                return;
+            }
+            
+            const maxFreq = Math.max(...Object.values(data.frequencies));
+            
+            // Simple text-based heatmap
+            const keyboardRows = [
+                ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+                ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+                ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
+                ['z', 'x', 'c', 'v', 'b', 'n', 'm']
+            ];
+            
+            let heatmapHTML = '<div style="font-family: monospace; font-size: 14px; line-height: 1.5;">';
+            heatmapHTML += '<h3>Keyboard Heatmap</h3>';
+            
+            keyboardRows.forEach(row => {
+                heatmapHTML += '<div style="margin: 5px 0;">';
+                row.forEach(key => {
+                    const frequency = data.frequencies[key] || 0;
+                    const intensity = frequency / maxFreq;
+                    const opacity = Math.max(0.1, intensity);
+                    const backgroundColor = frequency > 0 ? 
+                        `rgba(0, 102, 204, ${opacity})` : 
+                        'rgba(240, 240, 240, 0.8)';
+                    
+                    heatmapHTML += `<span style="
+                        display: inline-block;
+                        width: 30px;
+                        height: 30px;
+                        line-height: 30px;
+                        text-align: center;
+                        margin: 2px;
+                        border: 1px solid #ccc;
+                        border-radius: 4px;
+                        background-color: ${backgroundColor};
+                        color: ${frequency > 0 ? 'white' : '#666'};
+                        font-weight: bold;
+                    ">${key.toUpperCase()}</span>`;
+                });
+                heatmapHTML += '</div>';
+            });
+            
+            heatmapHTML += '</div>';
+            heatmapDiv.innerHTML = heatmapHTML;
+        }
+        
+        // Initialize
+        updateStats();
+    </script>
+</body>
+</html> 
