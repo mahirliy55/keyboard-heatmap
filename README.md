@@ -493,7 +493,7 @@ npm run dev
 [![GitHub Forks](https://img.shields.io/github/forks/yourusername/keyboard-heatmap?style=social)](https://github.com/yourusername/keyboard-heatmap/network/members)
 [![Twitter Follow](https://img.shields.io/twitter/follow/yourusername?style=social)](https://twitter.com/yourusername)
 
-[💬 **Discord**](https://discord.gg/yourlink) • [🐦 **Twitter**](https://twitter.com/yourusername) • [📧 **Email**](mailto:your@email.com)
+ • [📧 **Email**](mailto:yusifspain@email.com)
 
 </div>
 
@@ -515,7 +515,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
 
-**Made with ❤️ by [Your Name](https://github.com/yourusername)**
+**Made with ❤️ by [Yusif Jabrayilov](https://github.com/mahirliy55)**
 
 *Star ⭐ this repo if you find it useful!*
 
