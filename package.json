@@ -36,9 +36,9 @@
     "accessibility"
   ],
   "author": {
-    "name": "Your Name",
-    "email": "your.email@example.com",
-    "url": "https://github.com/yourusername"
+    "name": "Yusif Jabrayilov",
+    "email": "yusifspain@gmail.com",
+    "url": "https://github.com/mahirliy55"
   },
   "license": "MIT",
   "devDependencies": {
@@ -55,10 +55,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/keyboard-heatmap.git"
+    "url": "git+https://github.com/mahirliy55/keyboard-heatmap.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/keyboard-heatmap/issues"
+    "url": "https://github.com/mahirliy55/keyboard-heatmap/issues"
   },
-  "homepage": "https://github.com/yourusername/keyboard-heatmap#readme"
+  "homepage": "https://github.com/mahirliy55/keyboard-heatmap#readme"
 } 
