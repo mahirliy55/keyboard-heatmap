@@ -493,7 +493,7 @@ npm run dev
 [![GitHub Forks](https://img.shields.io/github/forks/yourusername/keyboard-heatmap?style=social)](https://github.com/yourusername/keyboard-heatmap/network/members)
 [![Twitter Follow](https://img.shields.io/twitter/follow/yourusername?style=social)](https://twitter.com/yourusername)
 
-[💬 **Discord**](https://discord.gg/yourlink) • [🐦 **Twitter**](https://twitter.com/yourusername) • [📧 **Email**](mailto:your@email.com)
+ • [📧 **Email**](mailto:yusifspain@email.com)
 
 </div>
 
