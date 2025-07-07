@@ -1,6 +1,6 @@
 {
   "name": "keyboard-heatmap",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "🎹 A beautiful, lightweight TypeScript package for tracking keyboard usage and generating stunning heatmap visualizations",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -61,4 +61,4 @@
     "url": "https://github.com/mahirliy55/keyboard-heatmap/issues"
   },
   "homepage": "https://github.com/mahirliy55/keyboard-heatmap#readme"
-} 
+}
