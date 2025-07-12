@@ -47,12 +47,22 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
     layout: Keyboard3DLayout = QWERTY_3D_LAYOUT,
     options: Heatmap3DOptions = {}
   ) {
+    console.log('🚀 ThreeJSHeatmapImpl constructor called', {
+      container: container.id || 'unnamed',
+      layout: layout.name,
+      options,
+      timestamp: new Date().toISOString()
+    });
+
     this.options = { ...DEFAULT_3D_OPTIONS, ...options };
     this.layout = layout;
+
+    console.log('📋 Constructor options merged:', this.options);
 
     // Initialize Three.js scene
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(this.options.backgroundColor);
+    console.log('🎬 Scene created with background:', this.options.backgroundColor);
 
     // Initialize camera
     this.camera = new THREE.PerspectiveCamera(
@@ -63,6 +73,7 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
     );
     this.camera.position.set(...this.options.cameraPosition);
     this.camera.lookAt(0, 0, 0);
+    console.log('📷 Camera initialized at position:', this.options.cameraPosition);
 
     // Initialize renderer
     this.renderer = new THREE.WebGLRenderer({
@@ -73,12 +84,15 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    console.log('🖼️ Renderer created with size:', { width: this.options.width, height: this.options.height });
     
     container.appendChild(this.renderer.domElement);
+    console.log('🔗 Renderer canvas attached to container');
 
     // Initialize mesh group
     this.mesh = new THREE.Group();
     this.scene.add(this.mesh);
+    console.log('📦 Mesh group created and added to scene');
 
     // Setup lighting
     this.setupLighting();
@@ -93,12 +107,17 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
 
     // Start animation loop
     this.startAnimation();
+
+    console.log('✅ ThreeJSHeatmapImpl constructor completed successfully');
   }
 
   private setupLighting(): void {
+    console.log('💡 Setting up lighting system...');
+    
     // Ambient light
     const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
     this.scene.add(ambientLight);
+    console.log('🌄 Ambient light added');
 
     // Main directional light
     const directionalLight = new THREE.DirectionalLight(0xffffff, this.options.lightIntensity);
@@ -107,11 +126,13 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
     directionalLight.shadow.mapSize.width = 2048;
     directionalLight.shadow.mapSize.height = 2048;
     this.scene.add(directionalLight);
+    console.log('☀️ Directional light added with intensity:', this.options.lightIntensity);
 
     // Fill light
     const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
     fillLight.position.set(-5, 5, -5);
     this.scene.add(fillLight);
+    console.log('🔦 Fill light added');
 
     // Spotlight for dramatic effect
     const spotlight = new THREE.SpotLight(0xffffff, 0.5);
@@ -120,9 +141,14 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
     spotlight.penumbra = 0.1;
     spotlight.castShadow = true;
     this.scene.add(spotlight);
+    console.log('🔴 Spotlight added');
+
+    console.log('✅ Lighting setup completed');
   }
 
   private setupOrbitControls(): void {
+    console.log('🎮 Setting up orbit controls...');
+    
     // Note: OrbitControls would need to be imported separately
     // For now, we'll implement basic mouse controls
     let isMouseDown = false;
@@ -130,6 +156,7 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
     let mouseY = 0;
 
     const onMouseDown = (event: MouseEvent) => {
+      console.log('🖱️ Mouse down detected');
       isMouseDown = true;
       mouseX = event.clientX;
       mouseY = event.clientY;
@@ -140,6 +167,7 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
 
       const deltaX = event.clientX - mouseX;
       const deltaY = event.clientY - mouseY;
+      console.log('🖱️ Mouse move delta:', { deltaX, deltaY });
 
       // Rotate camera around the scene
       const spherical = new THREE.Spherical();
@@ -159,12 +187,14 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
     };
 
     const onMouseUp = () => {
+      console.log('🖱️ Mouse up detected');
       isMouseDown = false;
     };
 
     const onWheel = (event: WheelEvent) => {
       const distance = this.camera.position.distanceTo(new THREE.Vector3(0, 0, 0));
       const newDistance = distance + event.deltaY * 0.01;
+      console.log('🎡 Wheel zoom:', { oldDistance: distance, newDistance });
       
       if (newDistance > 5 && newDistance < 50) {
         this.camera.position.normalize().multiplyScalar(newDistance);
@@ -175,9 +205,13 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
     this.renderer.domElement.addEventListener('mousemove', onMouseMove);
     this.renderer.domElement.addEventListener('mouseup', onMouseUp);
     this.renderer.domElement.addEventListener('wheel', onWheel);
+    
+    console.log('✅ Orbit controls setup completed');
   }
 
   private createKeyboardMesh(): void {
+    console.log('⌨️ Creating keyboard mesh...');
+    
     // Create base plate
     const baseGeometry = new THREE.BoxGeometry(
       this.layout.width,
@@ -189,14 +223,27 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
     baseMesh.position.set(this.layout.width / 2 - 0.5, -this.layout.baseHeight / 2, -this.layout.depth / 2);
     baseMesh.receiveShadow = true;
     this.mesh.add(baseMesh);
+    console.log('📐 Base plate created with dimensions:', {
+      width: this.layout.width,
+      height: this.layout.baseHeight,
+      depth: this.layout.depth
+    });
 
     // Create individual key meshes
-    this.layout.keys.forEach(keyPos => {
+    console.log('🔑 Creating individual key meshes, count:', this.layout.keys.length);
+    this.layout.keys.forEach((keyPos, index) => {
       this.createKeyMesh(keyPos);
+      if (index % 10 === 0) {
+        console.log(`🔑 Created ${index + 1}/${this.layout.keys.length} keys`);
+      }
     });
+    
+    console.log('✅ Keyboard mesh creation completed');
   }
 
   private createKeyMesh(keyPos: Key3DPosition): void {
+    console.log('🔑 Creating key mesh for:', keyPos.key);
+    
     // Key geometry
     const keyGeometry = new THREE.BoxGeometry(
       keyPos.width - this.options.keySpacing,
@@ -233,6 +280,7 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
   }
 
   private createKeyLabel(keyPos: Key3DPosition, keyMesh: THREE.Mesh): void {
+    console.log('🔑 Creating label for key:', keyPos.key);
     // Create canvas for text
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d')!;
@@ -277,6 +325,7 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
   }
 
   private startAnimation(): void {
+    console.log('🎬 Starting animation loop...');
     const animate = () => {
       this.animationFrame = requestAnimationFrame(animate);
       
@@ -300,6 +349,7 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
   }
 
   public update(data: Heatmap3DData): void {
+    console.log('📊 Updating heatmap with new data:', data);
     this.currentData = data;
     const prepared3DData = prepare3DData(data);
 
@@ -318,6 +368,7 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
     intensity: number,
     maxFrequency: number
   ): void {
+    console.log('🔄 Updating visuals for key:', keyPos.key, 'Frequency:', frequency, 'Intensity:', intensity);
     const keyMesh = this.keyMeshes.get(keyPos.key);
     if (!keyMesh) return;
 
@@ -355,6 +406,7 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
   }
 
   private animateKeyHeight(keyMesh: THREE.Mesh, targetHeight: number): void {
+    console.log('🎢 Animating key height for:', keyMesh.position.y, 'to', targetHeight);
     const currentHeight = keyMesh.scale.y;
     const duration = this.options.animationDuration;
     const startTime = Date.now();
@@ -378,11 +430,13 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
   }
 
   private setKeyHeight(keyMesh: THREE.Mesh, height: number): void {
+    console.log('📏 Setting key height for:', keyMesh.position.y, 'to', height);
     keyMesh.scale.y = height;
     keyMesh.position.y = this.layout.keyDepth / 2 * height + this.options.minHeight;
   }
 
   private updateKeyLabel(keyPos: Key3DPosition, frequency: number): void {
+    console.log('📝 Updating label for key:', keyPos.key, 'Frequency:', frequency);
     const labelMesh = this.labelMeshes.get(keyPos.key);
     if (!labelMesh) return;
 
@@ -419,6 +473,7 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
   }
 
   public resize(width: number, height: number): void {
+    console.log('🔄 Resizing heatmap to:', { width, height });
     this.options.width = width;
     this.options.height = height;
     
@@ -429,6 +484,7 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
   }
 
   public animate(): void {
+    console.log('🎬 Restarting animation loop...');
     if (this.animationFrame) {
       cancelAnimationFrame(this.animationFrame);
     }
@@ -436,6 +492,7 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
   }
 
   public setTheme(colorScale: [string, string]): void {
+    console.log('🎨 Changing heatmap theme to:', colorScale);
     this.options.colorScale = colorScale;
     
     // Update existing keys
@@ -445,6 +502,7 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
   }
 
   public toggleWireframe(): void {
+    console.log('�� Toggling wireframe:', this.options.wireframe);
     this.options.wireframe = !this.options.wireframe;
     
     this.keyMeshes.forEach(keyMesh => {
@@ -455,11 +513,13 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
   }
 
   public resetCamera(): void {
+    console.log('👁️ Resetting camera to default position:', this.options.cameraPosition);
     this.camera.position.set(...this.options.cameraPosition);
     this.camera.lookAt(0, 0, 0);
   }
 
   public dispose(): void {
+    console.log('🧹 Disposing Three.js heatmap resources...');
     // Stop animation
     if (this.animationFrame) {
       cancelAnimationFrame(this.animationFrame);
@@ -478,6 +538,7 @@ export class ThreeJSHeatmapImpl implements ThreeJSHeatmap {
     this.renderer.dispose();
     this.keyMeshes.clear();
     this.labelMeshes.clear();
+    console.log('✅ Heatmap resources disposed.');
   }
 }
 
@@ -495,6 +556,7 @@ export function generate3DHeatmap(
   options: Heatmap3DOptions = {},
   layout: Keyboard3DLayout = QWERTY_3D_LAYOUT
 ): ThreeJSHeatmap {
+  console.log('🎨 Generating 3D heatmap with data:', data);
   const heatmap = new ThreeJSHeatmapImpl(container, layout, options);
   
   if (data) {
@@ -513,6 +575,7 @@ export function generate3DTurkishFHeatmap(
   data: any,
   options: Heatmap3DOptions = {}
 ): ThreeJSHeatmap {
+  console.log('🇹🇷 Generating 3D Turkish F heatmap...');
   return generate3DHeatmap(container, data, options, TURKISH_F_3D_LAYOUT);
 }
 

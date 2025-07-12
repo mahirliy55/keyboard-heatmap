@@ -24,6 +24,9 @@ Object.defineProperty(exports, "KeyboardTrackerImpl", { enumerable: true, get: f
  * @returns A new KeyboardTracker instance
  */
 function createKeyboardTracker(options) {
-    return new KeyboardTracker_1.KeyboardTrackerImpl(options);
+    console.log('🏭 createKeyboardTracker factory function called with options:', options);
+    const tracker = new KeyboardTracker_1.KeyboardTrackerImpl(options);
+    console.log('✅ Keyboard tracker instance created successfully');
+    return tracker;
 }
 __exportStar(require("../types"), exports);
