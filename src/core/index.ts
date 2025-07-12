@@ -7,7 +7,10 @@ import { KeyboardTrackerOptions, KeyboardTracker } from '../types';
  * @returns A new KeyboardTracker instance
  */
 export function createKeyboardTracker(options?: KeyboardTrackerOptions): KeyboardTracker {
-  return new KeyboardTrackerImpl(options);
+  console.log('🏭 createKeyboardTracker factory function called with options:', options);
+  const tracker = new KeyboardTrackerImpl(options);
+  console.log('✅ Keyboard tracker instance created successfully');
+  return tracker;
 }
 
 export { KeyboardTrackerImpl };

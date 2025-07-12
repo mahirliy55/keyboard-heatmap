@@ -176,21 +176,35 @@ export const TURKISH_F_3D_LAYOUT: Keyboard3DLayout = {
  * Utility functions for 3D keyboard layouts
  */
 export function normalizeKey(key: string): string {
-  return key.toLowerCase().trim();
+  console.log('🔧 normalizeKey called with:', key);
+  const normalized = key.toLowerCase().trim();
+  console.log('🔧 normalizeKey result:', normalized);
+  return normalized;
 }
 
 export function findKeyPosition(layout: Keyboard3DLayout, key: string): Key3DPosition | null {
+  console.log('🔍 findKeyPosition called with layout:', layout.name, 'key:', key);
   const normalizedKey = normalizeKey(key);
-  return layout.keys.find(k => normalizeKey(k.key) === normalizedKey) || null;
+  const result = layout.keys.find(k => normalizeKey(k.key) === normalizedKey) || null;
+  console.log('🔍 findKeyPosition result:', result ? `Found key at (${result.x}, ${result.y})` : 'Key not found');
+  return result;
 }
 
 export function calculateKeyHeight(frequency: number, maxFrequency: number, minHeight: number = 0.1, maxHeight: number = 3): number {
-  if (maxFrequency === 0) return minHeight;
+  console.log('📏 calculateKeyHeight called with:', { frequency, maxFrequency, minHeight, maxHeight });
+  if (maxFrequency === 0) {
+    console.log('📏 calculateKeyHeight: maxFrequency is 0, returning minHeight:', minHeight);
+    return minHeight;
+  }
   const ratio = frequency / maxFrequency;
-  return minHeight + (maxHeight - minHeight) * ratio;
+  const height = minHeight + (maxHeight - minHeight) * ratio;
+  console.log('📏 calculateKeyHeight result:', { ratio, height });
+  return height;
 }
 
 export function interpolateColor(color1: string, color2: string, ratio: number): string {
+  console.log('🎨 interpolateColor called with:', { color1, color2, ratio });
+  
   // Convert hex colors to RGB
   const hex1 = color1.replace('#', '');
   const hex2 = color2.replace('#', '');
@@ -198,33 +212,46 @@ export function interpolateColor(color1: string, color2: string, ratio: number):
   const r1 = parseInt(hex1.substr(0, 2), 16);
   const g1 = parseInt(hex1.substr(2, 2), 16);
   const b1 = parseInt(hex1.substr(4, 2), 16);
-  
+
   const r2 = parseInt(hex2.substr(0, 2), 16);
   const g2 = parseInt(hex2.substr(2, 2), 16);
   const b2 = parseInt(hex2.substr(4, 2), 16);
-  
+
   // Interpolate
   const r = Math.round(r1 + (r2 - r1) * ratio);
   const g = Math.round(g1 + (g2 - g1) * ratio);
   const b = Math.round(b1 + (b2 - b1) * ratio);
-  
-  return `rgb(${r}, ${g}, ${b})`;
+
+  const result = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  console.log('🎨 interpolateColor result:', result);
+  return result;
 }
 
 export function prepare3DData(heatmapData: any): any {
-  const maxFrequency = Math.max(...Object.values(heatmapData.frequencies) as number[]);
-  const normalizedFrequencies: { [key: string]: number } = {};
-  const heatmapIntensities: { [key: string]: number } = {};
+  console.log('📊 prepare3DData called with data:', heatmapData);
   
-  Object.entries(heatmapData.frequencies).forEach(([key, frequency]) => {
-    normalizedFrequencies[key] = maxFrequency > 0 ? (frequency as number) / maxFrequency : 0;
-    heatmapIntensities[key] = normalizedFrequencies[key];
-  });
-  
-  return {
-    ...heatmapData,
+  if (!heatmapData || !heatmapData.frequencies) {
+    console.log('📊 prepare3DData: Invalid data, returning empty object');
+    return { frequencies: {}, maxFrequency: 0, totalPresses: 0 };
+  }
+
+  const frequencies = heatmapData.frequencies;
+  const maxFrequency = Math.max(...Object.values(frequencies) as number[]);
+  const totalPresses = heatmapData.totalPresses || Object.values(frequencies).reduce((sum: number, freq: any) => sum + freq, 0);
+
+  const result = {
+    frequencies,
     maxFrequency,
-    normalizedFrequencies,
-    heatmapIntensities
+    totalPresses,
+    startTime: heatmapData.startTime,
+    endTime: heatmapData.endTime
   };
+
+  console.log('📊 prepare3DData result:', {
+    keyCount: Object.keys(frequencies).length,
+    maxFrequency,
+    totalPresses
+  });
+
+  return result;
 } 

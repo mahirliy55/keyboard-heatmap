@@ -4,25 +4,36 @@ exports.generateHeatmapSVG = generateHeatmapSVG;
 const keyboardLayout_1 = require("./keyboardLayout");
 const colorUtils = {
     hexToRgb(hex) {
+        console.log('🎨 hexToRgb called with:', hex);
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? {
+        const rgbResult = result ? {
             r: parseInt(result[1], 16),
             g: parseInt(result[2], 16),
             b: parseInt(result[3], 16)
         } : null;
+        console.log('🎨 hexToRgb result:', rgbResult);
+        return rgbResult;
     },
     interpolateColor(color1, color2, factor) {
+        console.log('🌈 interpolateColor called with:', { color1, color2, factor });
         const c1 = this.hexToRgb(color1);
         const c2 = this.hexToRgb(color2);
-        if (!c1 || !c2)
+        if (!c1 || !c2) {
+            console.log('🌈 interpolateColor: Invalid colors, returning color1');
             return color1;
+        }
         const r = Math.round(c1.r + (c2.r - c1.r) * factor);
         const g = Math.round(c1.g + (c2.g - c1.g) * factor);
         const b = Math.round(c1.b + (c2.b - c1.b) * factor);
-        return this.rgbToHex(r, g, b);
+        const result = this.rgbToHex(r, g, b);
+        console.log('🌈 interpolateColor result:', result);
+        return result;
     },
     rgbToHex(r, g, b) {
-        return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+        console.log('🎨 rgbToHex called with:', { r, g, b });
+        const hex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+        console.log('🎨 rgbToHex result:', hex);
+        return hex;
     }
 };
 /**
@@ -32,17 +43,34 @@ const colorUtils = {
  * @returns SVG string representing the keyboard heatmap
  */
 function generateHeatmapSVG(data, options = {}) {
+    console.log('🖼️ generateHeatmapSVG called with data:', {
+        totalPresses: data.totalPresses,
+        uniqueKeys: Object.keys(data.frequencies).length,
+        options
+    });
     const { width = 800, height = 300, colorScale = ['#e6f3ff', '#0066cc'], showLabels = true, minOpacity = 0.1, maxOpacity = 1.0 } = options;
+    console.log('📋 SVG generation options:', {
+        width,
+        height,
+        colorScale,
+        showLabels,
+        minOpacity,
+        maxOpacity
+    });
     // Calculate the maximum frequency for normalization
     const maxFrequency = Math.max(...Object.values(data.frequencies));
+    console.log('📊 Maximum frequency calculated:', maxFrequency);
     if (maxFrequency === 0) {
+        console.log('⚠️ No data available, generating empty keyboard');
         return generateEmptyKeyboard(width, height, showLabels);
     }
     // Create SVG elements
     const svgElements = [];
     // Add background
     svgElements.push(`<rect width="${width}" height="${height}" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>`);
+    console.log('🎨 Background added to SVG');
     // Generate keys
+    console.log('⌨️ Generating keys, count:', keyboardLayout_1.QWERTY_LAYOUT.keys.length);
     for (const keyPos of keyboardLayout_1.QWERTY_LAYOUT.keys) {
         const frequency = data.frequencies[keyPos.key] || 0;
         const normalizedFreq = frequency / maxFrequency;
@@ -80,21 +108,28 @@ function generateHeatmapSVG(data, options = {}) {
             }
         }
     }
+    console.log('🏷️ Generated', svgElements.length, 'SVG elements');
     // Add legend
     svgElements.push(generateLegend(width, height, maxFrequency, colorScale));
+    console.log('📋 Legend added to SVG');
     // Combine all elements
-    return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+    const svgString = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
     ${svgElements.join('\n    ')}
   </svg>`;
+    console.log('✅ SVG generation completed, length:', svgString.length);
+    return svgString;
 }
 /**
  * Generates an empty keyboard layout
  */
 function generateEmptyKeyboard(width, height, showLabels) {
+    console.log('🔲 generateEmptyKeyboard called with:', { width, height, showLabels });
     const svgElements = [];
     // Add background
     svgElements.push(`<rect width="${width}" height="${height}" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>`);
+    console.log('🎨 Empty keyboard background added');
     // Generate empty keys
+    console.log('⌨️ Generating empty keys, count:', keyboardLayout_1.QWERTY_LAYOUT.keys.length);
     for (const keyPos of keyboardLayout_1.QWERTY_LAYOUT.keys) {
         const scaleX = width / keyboardLayout_1.QWERTY_LAYOUT.width;
         const scaleY = height / keyboardLayout_1.QWERTY_LAYOUT.height;
@@ -118,6 +153,7 @@ function generateEmptyKeyboard(width, height, showLabels) {
     // Add "No data" message
     svgElements.push(`<text x="${width / 2}" y="${height - 20}" text-anchor="middle" ` +
         `font-family="Arial, sans-serif" font-size="14" fill="#666">No tracking data available</text>`);
+    console.log('✅ Empty keyboard generated with', svgElements.length, 'elements');
     return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
     ${svgElements.join('\n    ')}
   </svg>`;
@@ -126,12 +162,13 @@ function generateEmptyKeyboard(width, height, showLabels) {
  * Generates a legend for the heatmap
  */
 function generateLegend(width, height, maxFrequency, colorScale) {
+    console.log('📋 generateLegend called with:', { width, height, maxFrequency, colorScale });
     const legendWidth = 200;
     const legendHeight = 20;
     const legendX = width - legendWidth - 20;
     const legendY = 20;
     const gradientId = 'heatmapGradient';
-    return `
+    const legend = `
     <defs>
       <linearGradient id="${gradientId}" x1="0%" y1="0%" x2="100%" y2="0%">
         <stop offset="0%" style="stop-color:${colorScale[0]};stop-opacity:1" />
@@ -143,4 +180,6 @@ function generateLegend(width, height, maxFrequency, colorScale) {
     <text x="${legendX + legendWidth}" y="${legendY - 5}" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#333">${maxFrequency}</text>
     <text x="${legendX + legendWidth / 2}" y="${legendY + legendHeight + 15}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#333">Key Press Frequency</text>
   `;
+    console.log('📋 Legend generated successfully');
+    return legend;
 }
