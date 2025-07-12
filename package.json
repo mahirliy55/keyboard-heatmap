@@ -42,8 +42,8 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "@types/react": "^18.0.0"
+    "@types/react": "^18.0.0",
+    "typescript": "^5.0.0"
   },
   "peerDependencies": {
     "react": ">=16.8.0"
@@ -60,5 +60,9 @@
   "bugs": {
     "url": "https://github.com/mahirliy55/keyboard-heatmap/issues"
   },
-  "homepage": "https://github.com/mahirliy55/keyboard-heatmap#readme"
+  "homepage": "https://github.com/mahirliy55/keyboard-heatmap#readme",
+  "dependencies": {
+    "@types/three": "^0.178.1",
+    "three": "^0.178.0"
+  }
 }

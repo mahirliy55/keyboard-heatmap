@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎹 3D Keyboard Heatmap Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header p {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .control-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn.btn-success {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn.btn-danger {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn.btn-warning {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+        }
+
+        .btn.btn-info {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+            box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .theme-selector {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .theme-btn {
+            width: 60px;
+            height: 30px;
+            border: 2px solid #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-btn.active {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+        }
+
+        .heatmap-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .heatmap-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #3498db, #9b59b6, #e74c3c, #f39c12, #2ecc71);
+        }
+
+        #heatmap3d {
+            width: 100%;
+            height: 600px;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .instructions {
+            background: rgba(52, 152, 219, 0.1);
+            border-left: 4px solid #3498db;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .instructions strong {
+            color: #2c3e50;
+        }
+
+        .settings-panel {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .setting-group label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .setting-group select,
+        .setting-group input {
+            padding: 0.5rem;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .setting-group select:focus,
+        .setting-group input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .tips {
+            background: rgba(46, 204, 113, 0.1);
+            border-left: 4px solid #2ecc71;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border-radius: 10px;
+        }
+
+        .tips h3 {
+            color: #27ae60;
+            margin-bottom: 1rem;
+        }
+
+        .tips ul {
+            list-style: none;
+        }
+
+        .tips li {
+            padding: 0.5rem 0;
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .tips li::before {
+            content: '🎯';
+            position: absolute;
+            left: 0;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .control-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .theme-selector {
+                justify-content: center;
+            }
+            
+            #heatmap3d {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎹 3D Keyboard Heatmap</h1>
+        <p>Experience your typing patterns in stunning 3D visualization</p>
+    </div>
+
+    <div class="container">
+        <div class="instructions">
+            <strong>How to use:</strong> Click "Start Tracking" and begin typing. Watch as your keyboard comes to life in 3D! 
+            The more you press a key, the taller and more colorful it becomes. Use your mouse to rotate, zoom, and explore the 3D heatmap.
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <button id="startBtn" class="btn btn-success">🚀 Start Tracking</button>
+                <button id="stopBtn" class="btn btn-danger" disabled>⏹️ Stop Tracking</button>
+                <button id="resetBtn" class="btn btn-warning">🔄 Reset Data</button>
+                <button id="toggleWireframe" class="btn btn-info">🔲 Toggle Wireframe</button>
+            </div>
+            
+            <div class="theme-selector">
+                <label style="font-weight: 600; color: #2c3e50;">🎨 Themes:</label>
+                <div class="theme-btn" data-theme="ocean" style="background: linear-gradient(45deg, #e3f2fd, #1976d2)" title="Ocean"></div>
+                <div class="theme-btn" data-theme="forest" style="background: linear-gradient(45deg, #e8f5e8, #2e7d32)" title="Forest"></div>
+                <div class="theme-btn" data-theme="sunset" style="background: linear-gradient(45deg, #fff3e0, #f57c00)" title="Sunset"></div>
+                <div class="theme-btn" data-theme="cherry" style="background: linear-gradient(45deg, #fce4ec, #c2185b)" title="Cherry"></div>
+                <div class="theme-btn" data-theme="neon" style="background: linear-gradient(45deg, #0a0a0a, #00ff41)" title="Neon"></div>
+                <div class="theme-btn active" data-theme="purple" style="background: linear-gradient(45deg, #f3e5f5, #7b1fa2)" title="Purple"></div>
+            </div>
+        </div>
+
+        <div class="settings-panel">
+            <div class="settings-grid">
+                <div class="setting-group">
+                    <label>Keyboard Layout</label>
+                    <select id="layoutSelect">
+                        <option value="qwerty">QWERTY</option>
+                        <option value="turkish-f">Turkish F</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label>Animation Speed</label>
+                    <select id="animationSpeed">
+                        <option value="500">Fast</option>
+                        <option value="1000" selected>Normal</option>
+                        <option value="2000">Slow</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label>Quality</label>
+                    <select id="qualitySelect">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high" selected>High</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label>Max Key Height</label>
+                    <input type="range" id="maxHeight" min="1" max="5" value="3" step="0.5">
+                    <span id="maxHeightValue">3</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalPresses">0</div>
+                <div class="stat-label">Total Presses</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="uniqueKeys">0</div>
+                <div class="stat-label">Unique Keys</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="duration">0s</div>
+                <div class="stat-label">Session Duration</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="wpm">0</div>
+                <div class="stat-label">WPM</div>
+            </div>
+        </div>
+
+        <div class="heatmap-container">
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner"></div>
+                <p>Loading 3D Heatmap...</p>
+            </div>
+            <div id="heatmap3d"></div>
+        </div>
+
+        <div class="tips">
+            <h3>💡 Pro Tips</h3>
+            <ul>
+                <li>Hold and drag to rotate the 3D view</li>
+                <li>Use mouse wheel to zoom in/out</li>
+                <li>Try different themes to see your data in new ways</li>
+                <li>Switch between keyboard layouts to see the difference</li>
+                <li>Toggle wireframe mode for a technical look</li>
+                <li>Higher quality settings provide better visuals</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="dist/index.js"></script>
+    <script>
+        // 3D Heatmap Demo Implementation
+        let tracker = null;
+        let heatmap3D = null;
+        let updateInterval = null;
+        let isTracking = false;
+        let startTime = 0;
+        let currentTheme = 'purple';
+        let currentLayout = 'qwerty';
+
+        // DOM elements
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const toggleWireframeBtn = document.getElementById('toggleWireframe');
+        const heatmap3dContainer = document.getElementById('heatmap3d');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        
+        // Stats elements
+        const totalPressesEl = document.getElementById('totalPresses');
+        const uniqueKeysEl = document.getElementById('uniqueKeys');
+        const durationEl = document.getElementById('duration');
+        const wpmEl = document.getElementById('wpm');
+        
+        // Settings elements
+        const layoutSelect = document.getElementById('layoutSelect');
+        const animationSpeed = document.getElementById('animationSpeed');
+        const qualitySelect = document.getElementById('qualitySelect');
+        const maxHeight = document.getElementById('maxHeight');
+        const maxHeightValue = document.getElementById('maxHeightValue');
+
+        // Theme buttons
+        const themeButtons = document.querySelectorAll('.theme-btn');
+
+        // Themes
+        const themes = {
+            ocean: ['#e3f2fd', '#1976d2'],
+            forest: ['#e8f5e8', '#2e7d32'],
+            sunset: ['#fff3e0', '#f57c00'],
+            cherry: ['#fce4ec', '#c2185b'],
+            neon: ['#0a0a0a', '#00ff41'],
+            purple: ['#f3e5f5', '#7b1fa2']
+        };
+
+        // Initialize
+        function init() {
+            // Create tracker
+            tracker = keyboardHeatmap.createKeyboardTracker({
+                ignoreModifierKeys: true,
+                caseSensitive: false
+            });
+
+            // Initialize 3D heatmap
+            initializeHeatmap3D();
+
+            // Setup event listeners
+            setupEventListeners();
+
+            // Hide loading spinner
+            loadingSpinner.style.display = 'none';
+        }
+
+        function initializeHeatmap3D() {
+            try {
+                const layout = currentLayout === 'qwerty' ? 
+                    keyboardHeatmap.QWERTY_3D_LAYOUT : 
+                    keyboardHeatmap.TURKISH_F_3D_LAYOUT;
+
+                const options = {
+                    width: heatmap3dContainer.clientWidth,
+                    height: 600,
+                    colorScale: themes[currentTheme],
+                    showLabels: true,
+                    enableAnimation: true,
+                    animationDuration: parseInt(animationSpeed.value),
+                    quality: qualitySelect.value,
+                    maxHeight: parseFloat(maxHeight.value),
+                    enableOrbitControls: true,
+                    backgroundColor: '#f8f9fa'
+                };
+
+                heatmap3D = keyboardHeatmap.generate3DHeatmap(
+                    heatmap3dContainer,
+                    null,
+                    options,
+                    layout
+                );
+
+                console.log('3D Heatmap initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize 3D heatmap:', error);
+                heatmap3dContainer.innerHTML = '<p style="text-align: center; color: #e74c3c; padding: 2rem;">Failed to load 3D heatmap. Please check if Three.js is loaded.</p>';
+            }
+        }
+
+        function setupEventListeners() {
+            // Control buttons
+            startBtn.addEventListener('click', startTracking);
+            stopBtn.addEventListener('click', stopTracking);
+            resetBtn.addEventListener('click', resetData);
+            toggleWireframeBtn.addEventListener('click', toggleWireframe);
+
+            // Theme buttons
+            themeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    themeButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentTheme = btn.dataset.theme;
+                    if (heatmap3D) {
+                        heatmap3D.setTheme(themes[currentTheme]);
+                    }
+                });
+            });
+
+            // Settings
+            layoutSelect.addEventListener('change', (e) => {
+                currentLayout = e.target.value;
+                reinitializeHeatmap3D();
+            });
+
+            animationSpeed.addEventListener('change', (e) => {
+                if (heatmap3D) {
+                    heatmap3D.options.animationDuration = parseInt(e.target.value);
+                }
+            });
+
+            qualitySelect.addEventListener('change', () => {
+                reinitializeHeatmap3D();
+            });
+
+            maxHeight.addEventListener('input', (e) => {
+                maxHeightValue.textContent = e.target.value;
+                if (heatmap3D) {
+                    heatmap3D.options.maxHeight = parseFloat(e.target.value);
+                }
+            });
+
+            // Window resize
+            window.addEventListener('resize', () => {
+                if (heatmap3D) {
+                    heatmap3D.resize(heatmap3dContainer.clientWidth, 600);
+                }
+            });
+        }
+
+        function startTracking() {
+            if (!tracker) return;
+
+            isTracking = true;
+            startTime = Date.now();
+            
+            tracker.startTracking();
+            
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            
+            // Start update interval
+            updateInterval = setInterval(updateStats, 1000);
+            
+            console.log('Started tracking');
+        }
+
+        function stopTracking() {
+            if (!tracker) return;
+
+            isTracking = false;
+            
+            const finalData = tracker.stopTracking();
+            
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            
+            // Stop update interval
+            if (updateInterval) {
+                clearInterval(updateInterval);
+                updateInterval = null;
+            }
+            
+            // Final update
+            updateStats();
+            
+            console.log('Stopped tracking. Final data:', finalData);
+        }
+
+        function resetData() {
+            if (!tracker) return;
+
+            // Stop tracking if active
+            if (isTracking) {
+                stopTracking();
+            }
+            
+            tracker.reset();
+            
+            // Reset stats
+            totalPressesEl.textContent = '0';
+            uniqueKeysEl.textContent = '0';
+            durationEl.textContent = '0s';
+            wpmEl.textContent = '0';
+            
+            // Reset 3D heatmap
+            if (heatmap3D) {
+                heatmap3D.update({
+                    frequencies: {},
+                    totalPresses: 0,
+                    startTime: 0,
+                    maxFrequency: 0,
+                    normalizedFrequencies: {},
+                    heatmapIntensities: {}
+                });
+            }
+            
+            console.log('Data reset');
+        }
+
+        function toggleWireframe() {
+            if (heatmap3D) {
+                heatmap3D.toggleWireframe();
+            }
+        }
+
+        function updateStats() {
+            if (!tracker) return;
+
+            const data = tracker.getHeatmapData();
+            
+            // Update stats
+            totalPressesEl.textContent = data.totalPresses.toLocaleString();
+            uniqueKeysEl.textContent = Object.keys(data.frequencies).length;
+            
+            // Calculate duration
+            const duration = isTracking ? 
+                Math.round((Date.now() - startTime) / 1000) : 
+                Math.round((data.endTime - data.startTime) / 1000);
+            durationEl.textContent = `${duration}s`;
+            
+            // Calculate WPM (approximate)
+            const wpm = duration > 0 ? Math.round((data.totalPresses / 5) / (duration / 60)) : 0;
+            wpmEl.textContent = wpm;
+            
+            // Update 3D heatmap
+            if (heatmap3D && data.totalPresses > 0) {
+                const prepared3DData = keyboardHeatmap.prepare3DData(data);
+                heatmap3D.update(prepared3DData);
+            }
+        }
+
+        function reinitializeHeatmap3D() {
+            if (heatmap3D) {
+                heatmap3D.dispose();
+            }
+            heatmap3dContainer.innerHTML = '';
+            initializeHeatmap3D();
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(init, 100); // Small delay to ensure everything is loaded
+        });
+    </script>
+</body>
+</html> 
